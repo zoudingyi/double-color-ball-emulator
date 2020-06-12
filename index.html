@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>双色球模拟器</title>
+  <style>
+    span {
+      cursor: pointer;
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      line-height: 30px;
+      text-align: center;
+      border: 1px solid #9a9a9a;
+      border-radius: 50%;
+      margin: 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="red"></div>
+  <div id="blue"></div>
+  红球幸运号码：<input type="text"> (幸运号码最好不超过3个)
+  <br>
+  蓝球幸运号码：<input type="text"> (从填写的号码中随机选择其中一个)
+  <br>
+  <button>开始</button>
+  <button>清除</button>
+  <br>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    var red = document.getElementById('red')
+    var blue = document.getElementById('blue')
+    var start = document.getElementsByTagName('button')[0];
+    var clr = document.getElementsByTagName('button')[1];
+    var luckRed = document.getElementsByTagName('input')[0];
+    var luckBlue = document.getElementsByTagName('input')[1];
+    var isExceed = false // 输入号码是否超过范围
+    
+    function generate(element, num) {
+      let srt = '';
+      for (let i = 1; i <= num; i++) {
+        if (i < 10) {
+          srt += `<span>0${i}</span>`
+
+        } else {
+          srt += `<span>${i}</span>`
+        }
+      }
+      element.innerHTML = srt;
+    }
+    generate(red, 33);
+    generate(blue, 16);
+
+    // 取随机数
+    function ranDom(start, end) {
+      var _a = end - start + 1;
+      return Math.floor(Math.random() * _a + start)
+    }
+    // 生成一个数组 并且需要给数组进行去重以及确定数组内元素的个数。因为在这里我们需要调用上面取随机数的函数
+    function arrAy(num, start, end) {
+      let _b = [];
+      while (_b.length < num) {
+        var _c = ranDom(start, end)
+        if (_b.indexOf(_c) === -1) {
+          _b.push(_c);
+        }
+      }
+      return _b;
+    }
+    // 包含红色幸运号码
+    function arrLuckRed(num, start, end) {
+      let numArr = luckRed.value.split(' ')
+      numArr = numArr.map(item => Number(item));
+      console.log(numArr)
+      let _b
+      let flage
+      do {
+        flage = 0;
+        _b = arrAy(num, start, end);
+        console.log('_b', _b)
+        _b.forEach((item) => {
+          numArr.forEach((num) => {
+            if (item === num) {
+              console.log(num)
+              flage += 1
+            }
+          })
+        })
+      } while (flage !== numArr.length)
+      return _b
+    }
+    // 包含蓝色幸运号码
+    function arrLuckBlue(num, start, end) {
+      let numBlue = luckBlue.value.split(' ')
+      numBlue = numBlue.map(item => Number(item));
+      console.log(numBlue)
+      let _b
+      let flage = true
+      do {
+        _b = arrAy(num, start, end);
+        const [item] = _b
+        numBlue.forEach((ball) => {
+          if (item === ball) {
+            console.log('蓝球', item)
+            flage = false
+          }
+        })
+      } while (flage)
+      return _b
+    }
+    // 得到一个有随机数的数组
+    function backGround(arr, color, element) {
+      for (var i = 0; i < element.length; i++) {
+        //先对元素内的所有元素进行背景色清空。
+        const ele = element[i];
+        ele.style.background = '';
+        ele.style['color'] = '#000';
+      }
+      for (var j = 0; j < arr.length; j++) {
+        //这里对对应的元素进行背景色改变。因为下标和元素差1个，所以这里减1。
+        const ele = element[arr[j] - 1]
+        ele.style.background = color;
+        ele.style['color'] = '#FFF';
+      }
+    }
+    // 调用这些函数，因为下面需要定时器来让它自动选择，所以这里我把需要调用的函数写到了这一个函数内。
+    function select() {
+      let _d
+      let _e
+      if (luckRed.value === '') {
+        _d = arrAy(6, 1, 33)
+      } else {
+        _d = arrLuckRed(6, 1, 33)
+      }
+      if (luckBlue.value === '') {
+        _e = arrAy(1, 1, 16)
+      } else {
+        _e = arrLuckBlue(1, 1, 16)
+      }
+      backGround(_d, '#F00001', red.children);
+      backGround(_e, '#0986D3', blue.children);
+      console.log(_d, _e)
+    }
+    // 动画效果
+    function animation () {
+      let _d = arrAy(6, 1, 33)
+      let _e = arrAy(1, 1, 16)
+      backGround(_d, '#F00001', red.children);
+      backGround(_e, '#0986D3', blue.children);
+    }
+    // 判断输入的号码是否超过范围
+    function outOfRange() {
+      let numArr = luckRed.value.split(' ')
+      let numBlue = luckBlue.value.split(' ')
+      numArr = numArr.map(item => Number(item));
+      numBlue = numBlue.map(item => Number(item));
+      numArr.forEach((item) => {
+        if (item > 33) {
+          isExceed = true
+          alert('输入的红球号码超过范围')
+        }
+      })
+      numBlue.forEach((item) => {
+        if (item > 16) {
+          isExceed = true
+          alert('输入的蓝球号码超过范围')
+        }
+      })
+
+      if (isExceed) {
+        return false;
+      }
+      return true;
+    } 
+
+    var time = null
+    start.onclick = function () {
+      if (!outOfRange()) return;
+      if (time == null) {
+        time = setInterval(function () {
+          animation()
+        }, 60)
+        setTimeout(() => {
+          clearInterval(time)
+          time = null
+          select()
+        }, 2000)
+      }
+    }
+
+    function clear(array) {
+      if (time == null) {
+        for (let i = 0; i < array.length; i++) {
+          const element = array[i];
+          element.style.background = '';
+          element.style.color = '#000';
+        }
+      }
+    }
+
+    clr.onclick = function () {
+      luckRed.value = ''
+      luckBlue.value = ''
+      clear(red.children)
+      clear(blue.children)
+    }
+
+  </script>
+</body>
+
+</html>
